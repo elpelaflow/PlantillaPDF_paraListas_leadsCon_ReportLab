@@ -28,3 +28,7 @@ python generate_styled_pdf_template_with_ui.py
 ```
 
 Tras elegir tu archivo CSV, se generará un PDF con el nombre `reporte_leads_estilizado.pdf` en la misma carpeta.
+
+## Licencia
+
+Este proyecto se distribuye bajo la licencia MIT. Consulta el archivo [LICENSE](LICENSE) para más información.

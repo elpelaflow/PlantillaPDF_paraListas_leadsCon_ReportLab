@@ -20,6 +20,15 @@ COLOR_5 = colors.HexColor("#FAFDF6")
 
 # --- Encabezado y pie ---
 def add_page_elements(canvas, doc):
+    """Dibuja en cada página el encabezado y el pie de página.
+
+    Parameters
+    ----------
+    canvas : reportlab.pdfgen.canvas.Canvas
+        Lienzo de ReportLab utilizado para dibujar los elementos.
+    doc : reportlab.platypus.BaseDocTemplate
+        Documento que se está generando.
+    """
     canvas.saveState()
     canvas.setFont("Helvetica-Bold", 10)
     canvas.setFillColor(COLOR_1)
@@ -43,6 +52,20 @@ def add_page_elements(canvas, doc):
 
 # --- Generación del PDF ---
 def generate_pdf(csv_file, col_widths_px=None):
+    """Genera un reporte PDF a partir de un archivo CSV.
+
+    Parameters
+    ----------
+    csv_file : str
+        Ruta al archivo CSV con la información de los leads.
+    col_widths_px : list of int, optional
+        Lista con los anchos de las columnas en píxeles obtenidos de la interfaz.
+
+    Returns
+    -------
+    None
+        El PDF se guarda en la misma carpeta del CSV y se notifica al usuario.
+    """
     try:
         # Leer CSV
         df = pd.read_csv(csv_file, sep=';', encoding='utf-8', engine='python')
@@ -142,6 +165,7 @@ def generate_pdf(csv_file, col_widths_px=None):
 
 # --- Interfaz gráfica ---
 class PDFGeneratorApp:
+    """Interfaz gráfica para seleccionar un CSV y generar el PDF."""
     def __init__(self, root):
         self.root = root
         root.title("Generador de PDF desde CSV")
