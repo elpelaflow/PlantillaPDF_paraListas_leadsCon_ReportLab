@@ -8,7 +8,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from datetime import datetime
 import tkinter as tk
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, ttk
 import os
 
 # --- Colores ---
@@ -42,7 +42,7 @@ def add_page_elements(canvas, doc):
     canvas.restoreState()
 
 # --- Generación del PDF ---
-def generate_pdf(csv_file):
+def generate_pdf(csv_file, col_widths_px=None):
     try:
         # Leer CSV
         df = pd.read_csv(csv_file, sep=';', encoding='utf-8', engine='python')
@@ -56,38 +56,19 @@ def generate_pdf(csv_file):
 
         # 2) Calcular anchos proporcionales
         total_width = landscape(letter)[0] - (0.5 + 0.5) * inch
-        max_chars = [
-            max(df[col].astype(str).map(len).max(), len(col))
-            for col in df.columns
-        ]
-        sum_chars = sum(max_chars)
-        raw_w = [mc / sum_chars * total_width for mc in max_chars]
-
-        # ──> Aquí fijas solo Email a 1.8" y dejas las demás en raw_w:
-        col_widths = []
-        for col, w in zip(df.columns, raw_w):
-            if col == "Email":
-                col_widths.append(1.2 * inch)   # ancho fijo para Email
-            else:
-                col_widths.append(w)
-
-        # aplicar mínimo y reescalar preservando el ancho del email
         min_w = 0.6 * inch
-        w_min = [max(w, min_w) for w in col_widths]
 
-        email_idx = df.columns.get_loc("Email")
-        email_width = 1.2 * inch  # ancho fijo final
-
-        remaining_width = total_width - email_width
-        other_total = sum(w_min) - w_min[email_idx]
-        scale = remaining_width / other_total if other_total > 0 else 1
-
-        col_widths = []
-        for i, w in enumerate(w_min):
-            if i == email_idx:
-                col_widths.append(email_width)
-            else:
-                col_widths.append(w * scale)
+        if col_widths_px:
+            px_total = sum(col_widths_px)
+            col_widths = [w / px_total * total_width for w in col_widths_px]
+        else:
+            max_chars = [
+                max(df[col].astype(str).map(len).max(), len(col))
+                for col in df.columns
+            ]
+            sum_chars = sum(max_chars)
+            raw_w = [mc / sum_chars * total_width for mc in max_chars]
+            col_widths = [max(w, min_w) for w in raw_w]
 
         # 3) Estilos de párrafo
         styles = getSampleStyleSheet()
@@ -97,8 +78,8 @@ def generate_pdf(csv_file):
             name="Header", 
             parent=styles["Normal"],
             fontName="Helvetica-Bold", 
-            fontSize=7, 
-            leading=9,
+            fontSize=6, 
+            leading=8,
             alignment=1, 
             textColor=COLOR_5
         )
@@ -179,18 +160,50 @@ class PDFGeneratorApp:
         ).pack(pady=5)
 
         self.csv_file = None
+        self.df = None
 
     def select_csv(self):
         path = filedialog.askopenfilename(filetypes=[("CSV files","*.csv")])
         if path:
             self.csv_file = path
             self.file_label.config(text=os.path.basename(path))
+            try:
+                self.df = pd.read_csv(path, sep=';', encoding='utf-8', engine='python')
+                self.df.columns = [
+                    "Empresa", "Dirección", "Rubro", "Teléfono", "Email", "Web",
+                    "Valoración", "nComentarios", "Reputación", "nvConfianza",
+                    "nvContacto", "CatLead", "utiLeads"
+                ]
+            except Exception as e:
+                messagebox.showerror("Error", f"No se pudo leer el CSV:\n{e}")
+                self.csv_file = None
+                self.df = None
 
     def on_generate(self):
         if not self.csv_file:
             messagebox.showwarning("Atención", "Debes seleccionar un archivo CSV primero.")
         else:
-            generate_pdf(self.csv_file)
+            self.open_adjust_window()
+
+    def open_adjust_window(self):
+        if self.df is None:
+            return
+        win = tk.Toplevel(self.root)
+        win.title("Ajustar anchos de columnas")
+        tree = ttk.Treeview(win, columns=list(self.df.columns), show='headings')
+        for col in self.df.columns:
+            tree.heading(col, text=col)
+            tree.column(col, width=100, stretch=True)
+        for row in self.df.head(5).itertuples(index=False):
+            tree.insert('', 'end', values=list(row))
+        tree.pack(fill='both', expand=True, padx=10, pady=10)
+
+        def confirm():
+            widths = [tree.column(c)['width'] for c in self.df.columns]
+            win.destroy()
+            generate_pdf(self.csv_file, widths)
+
+        ttk.Button(win, text="Generar PDF", command=confirm).pack(pady=5)
 
 if __name__ == "__main__":
     root = tk.Tk()
