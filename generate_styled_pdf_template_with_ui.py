@@ -10,6 +10,7 @@ from datetime import datetime
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 import os
+import json
 
 # --- Colores ---
 COLOR_1 = colors.HexColor("#2D2A32")
@@ -17,6 +18,9 @@ COLOR_2 = colors.HexColor("#DDD92A")
 COLOR_3 = colors.HexColor("#EAE151")
 COLOR_4 = colors.HexColor("#EEEFA8")
 COLOR_5 = colors.HexColor("#FAFDF6")
+
+# Archivo donde se guardan los anchos de columna utilizados
+CONFIG_FILE = "column_widths.json"
 
 # --- Encabezado y pie ---
 def add_page_elements(canvas, doc):
@@ -95,7 +99,7 @@ def generate_pdf(csv_file, col_widths_px=None):
             name="Header", 
             parent=styles["Normal"],
             fontName="Helvetica-Bold", 
-            fontSize=6, 
+            fontSize=5, 
             leading=8,
             alignment=1, 
             textColor=COLOR_5
@@ -204,15 +208,32 @@ class PDFGeneratorApp:
         win = tk.Toplevel(self.root)
         win.title("Ajustar anchos de columnas")
         tree = ttk.Treeview(win, columns=list(self.df.columns), show='headings')
+
+        # Cargar anchos guardados previamente, si existen
+        if os.path.exists(CONFIG_FILE):
+            try:
+                with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+                    saved_widths = json.load(f)
+            except Exception:
+                saved_widths = {}
+        else:
+            saved_widths = {}
+
         for col in self.df.columns:
             tree.heading(col, text=col)
-            tree.column(col, width=100, stretch=True)
+            width = saved_widths.get(col, 100)
+            tree.column(col, width=width, stretch=True)
         for row in self.df.head(5).itertuples(index=False):
             tree.insert('', 'end', values=list(row))
         tree.pack(fill='both', expand=True, padx=10, pady=10)
 
         def confirm():
             widths = [tree.column(c)['width'] for c in self.df.columns]
+            try:
+                with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+                    json.dump(dict(zip(self.df.columns, widths)), f)
+            except Exception:
+                pass
             win.destroy()
             generate_pdf(self.csv_file, widths)
 
