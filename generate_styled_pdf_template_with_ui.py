@@ -70,14 +70,8 @@ def generate_pdf(csv_file, col_widths_px=None):
         # Leer CSV
         df = pd.read_csv(csv_file, sep=';', encoding='utf-8', engine='python')
 
-        # 1) Renombrar columnas
-        df.columns = [
-            "Empresa", "Dirección", "Rubro", "Teléfono", "Email", "Web",
-            "Valoración", "nComentarios", "Reputación", "nvConfianza",
-            "nvContacto", "CatLead", "utiLeads"
-        ]
-
-        # 2) Calcular anchos proporcionales
+        
+        # Calcular anchos proporcionales
         total_width = landscape(letter)[0] - (0.5 + 0.5) * inch
         min_w = 0.6 * inch
 
@@ -193,11 +187,6 @@ class PDFGeneratorApp:
             self.file_label.config(text=os.path.basename(path))
             try:
                 self.df = pd.read_csv(path, sep=';', encoding='utf-8', engine='python')
-                self.df.columns = [
-                    "Empresa", "Dirección", "Rubro", "Teléfono", "Email", "Web",
-                    "Valoración", "nComentarios", "Reputación", "nvConfianza",
-                    "nvContacto", "CatLead", "utiLeads"
-                ]
             except Exception as e:
                 messagebox.showerror("Error", f"No se pudo leer el CSV:\n{e}")
                 self.csv_file = None
