@@ -71,11 +71,23 @@ def generate_pdf(csv_file):
             else:
                 col_widths.append(w)
 
-        # aplicar mínimo y reescalar
+        # aplicar mínimo y reescalar preservando el ancho del email
         min_w = 0.6 * inch
-        w_min = [max(w, min_w) for w in raw_w]
-        scale = total_width / sum(w_min)
-        col_widths = [w * scale for w in w_min]
+        w_min = [max(w, min_w) for w in col_widths]
+
+        email_idx = df.columns.get_loc("Email")
+        email_width = 1.2 * inch  # ancho fijo final
+
+        remaining_width = total_width - email_width
+        other_total = sum(w_min) - w_min[email_idx]
+        scale = remaining_width / other_total if other_total > 0 else 1
+
+        col_widths = []
+        for i, w in enumerate(w_min):
+            if i == email_idx:
+                col_widths.append(email_width)
+            else:
+                col_widths.append(w * scale)
 
         # 3) Estilos de párrafo
         styles = getSampleStyleSheet()
