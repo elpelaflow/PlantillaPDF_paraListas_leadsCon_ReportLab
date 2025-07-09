@@ -11,28 +11,72 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 import os
 import json
+import random                      # --- MODIFICADO: para sortear paletas ---
 
-# --- Colores ---
-COLOR_1 = colors.HexColor("#2D2A32")
-COLOR_2 = colors.HexColor("#DDD92A")
-COLOR_3 = colors.HexColor("#EAE151")
-COLOR_4 = colors.HexColor("#EEEFA8")
-COLOR_5 = colors.HexColor("#FAFDF6")
+# --------------------------------------------------------------------------
+# --- MODIFICADO: 5 PALETAS COMPLETAS --------------------------------------
+# Cada diccionario define los 5 “roles” de color que usa el PDF
+# --------------------------------------------------------------------------
+PALETTES = [
+    # Paleta original
+    {
+        "HEADER_BG": "#2D2A32",
+        "ACCENT":    "#DDD92A",
+        "GRID":      "#EAE151",
+        "ROW_ODD":   "#EEEFA8",
+        "ROW_EVEN":  "#FAFDF6",
+    },
+    # Paleta 1  (540d6e…)
+    {
+        "HEADER_BG": "#540d6e",
+        "ACCENT":    "#ee4266",
+        "GRID":      "#1f271b",
+        "ROW_ODD":   "#ffd23f",
+        "ROW_EVEN":  "#f3fcf0",
+    },
+    # Paleta 2  (363537…)
+    {
+        "HEADER_BG": "#363537",
+        "ACCENT":    "#ef2d56",
+        "GRID":      "#ed7d3a",
+        "ROW_ODD":   "#2fbf71",
+        "ROW_EVEN":  "#8cd867",
+    },
+    # Paleta 3  (094074…)
+    {
+        "HEADER_BG": "#094074",
+        "ACCENT":    "#fe9000",
+        "GRID":      "#3c6997",
+        "ROW_ODD":   "#ffdd4a",
+        "ROW_EVEN":  "#5adbff",
+    },
+    # Paleta 4  (e0acd5…)
+    {
+        "HEADER_BG": "#6a3e37",
+        "ACCENT":    "#3993dd",
+        "GRID":      "#29e7cd",
+        "ROW_ODD":   "#e0acd5",
+        "ROW_EVEN":  "#f4ebe8",
+    },
+]
+
+# Sorteamos una paleta al iniciar el script
+_palette = random.choice(PALETTES)            # --- MODIFICADO
+
+# Convertimos a objetos HexColor que ReportLab entiende
+COLOR_1 = colors.HexColor(_palette["HEADER_BG"])
+COLOR_2 = colors.HexColor(_palette["ACCENT"])
+COLOR_3 = colors.HexColor(_palette["GRID"])
+COLOR_4 = colors.HexColor(_palette["ROW_ODD"])
+COLOR_5 = colors.HexColor(_palette["ROW_EVEN"])
+# --------------------------------------------------------------------------
 
 # Archivo donde se guardan los anchos de columna utilizados
 CONFIG_FILE = "column_widths.json"
 
 # --- Encabezado y pie ---
 def add_page_elements(canvas, doc):
-    """Dibuja en cada página el encabezado y el pie de página.
-
-    Parameters
-    ----------
-    canvas : reportlab.pdfgen.canvas.Canvas
-        Lienzo de ReportLab utilizado para dibujar los elementos.
-    doc : reportlab.platypus.BaseDocTemplate
-        Documento que se está generando.
-    """
+    """Dibuja en cada página el encabezado y el pie de página."""
     canvas.saveState()
     canvas.setFont("Helvetica-Bold", 10)
     canvas.setFillColor(COLOR_1)
@@ -56,25 +100,11 @@ def add_page_elements(canvas, doc):
 
 # --- Generación del PDF ---
 def generate_pdf(csv_file, col_widths_px=None):
-    """Genera un reporte PDF a partir de un archivo CSV.
-
-    Parameters
-    ----------
-    csv_file : str
-        Ruta al archivo CSV con la información de los leads.
-    col_widths_px : list of int, optional
-        Lista con los anchos de las columnas en píxeles obtenidos de la interfaz.
-
-    Returns
-    -------
-    None
-        El PDF se guarda en la misma carpeta del CSV y se notifica al usuario.
-    """
+    """Genera un reporte PDF a partir de un archivo CSV."""
     try:
         # Leer CSV
         df = pd.read_csv(csv_file, sep=';', encoding='utf-8', engine='python')
 
-        
         # Calcular anchos proporcionales
         total_width = landscape(letter)[0] - (0.5 + 0.5) * inch
         min_w = 0.6 * inch
@@ -91,37 +121,35 @@ def generate_pdf(csv_file, col_widths_px=None):
             raw_w = [mc / sum_chars * total_width for mc in max_chars]
             col_widths = [max(w, min_w) for w in raw_w]
 
-        # 3) Estilos de párrafo
+        # Estilos de párrafo
         styles = getSampleStyleSheet()
 
-        # ---- Aquí defines el tamaño de la fuente de los encabezados ----
         header_style = ParagraphStyle(
-            name="Header", 
+            name="Header",
             parent=styles["Normal"],
-            fontName="Helvetica-Bold", 
-            fontSize=5, 
+            fontName="Helvetica-Bold",
+            fontSize=5,
             leading=8,
-            alignment=1, 
-            textColor=COLOR_5
+            alignment=1,
+            textColor=COLOR_5     # Texto claro sobre fondo oscuro
         )
 
-        # ---- Aquí defines el tamaño de la fuente del contenido de las celdas ----
         cell_style = ParagraphStyle(
-            name="Cell", 
+            name="Cell",
             parent=styles["Normal"],
-            fontName="Helvetica", 
-            fontSize=5, 
+            fontName="Helvetica",
+            fontSize=5,
             leading=6,
             alignment=1
         )
 
-        # 4) Preparar data envuelta en Paragraphs
+        # Preparar data
         data = [[Paragraph(col, header_style) for col in df.columns]]
         for row in df.itertuples(index=False):
             data.append([Paragraph(str(c) if pd.notna(c) else "", cell_style)
                          for c in row])
 
-        # 5) Crear y poblar el PDF
+        # Crear y poblar el PDF
         csv_dir = os.path.dirname(csv_file)
         pdf_file = os.path.join(csv_dir, "reporte_leads_estilizado.pdf")
         doc = SimpleDocTemplate(
@@ -147,10 +175,10 @@ def generate_pdf(csv_file, col_widths_px=None):
             ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
             ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
             ('TOPPADDING', (0, 0), (-1, 0), 6),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 6),            
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, 0), 8),
-            ('VALIGN',   (0, 1), (-1, -1), 'MIDDLE'),            
+            ('VALIGN',   (0, 1), (-1, -1), 'MIDDLE'),
             ('BACKGROUND', (0, 1), (-1, -1), COLOR_4),
             ('ROWBACKGROUNDS', (0, 1), (-1, -1), [COLOR_4, COLOR_5]),
             ('GRID', (0, 0), (-1, -1), 0.25, COLOR_3),
@@ -173,23 +201,28 @@ class PDFGeneratorApp:
 
         tk.Label(root, text="Selecciona un CSV de leads", font=("Helvetica", 12)).pack(pady=10)
         tk.Button(
-            root, text="Seleccionar archivo...", command=self.select_csv,
-            bg="#DDD92A", fg="#2D2A32"
+            root,
+            text="Seleccionar archivo...",
+            command=self.select_csv,
+            bg=str(COLOR_2),           # --- MODIFICADO: usa color de la paleta
+            fg=str(COLOR_1)
         ).pack()
         self.file_label = tk.Label(root, text="Ningún archivo seleccionado", font=("Helvetica", 10))
         self.file_label.pack(pady=8)
         tk.Button(
-            root, text="Generar PDF", command=self.on_generate,
-            bg="#2D2A32", fg="#FAFDF6"
+            root,
+            text="Generar PDF",
+            command=self.on_generate,
+            bg=str(COLOR_1),           # --- MODIFICADO: usa color de la paleta
+            fg=str(COLOR_5)
         ).pack(pady=5)
 
         self.csv_file = None
         self.df = None
-        # Guarda el estado de ordenamiento por columna
         self.sort_states = {}
 
     def select_csv(self):
-        path = filedialog.askopenfilename(filetypes=[("CSV files","*.csv")])
+        path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
         if path:
             self.csv_file = path
             self.file_label.config(text=os.path.basename(path))
@@ -217,26 +250,22 @@ class PDFGeneratorApp:
         self.sort_states = {c: False for c in self.df.columns}
 
         def sort_column(col):
-            """Ordena el DataFrame por la columna indicada y actualiza la vista."""
             reverse = self.sort_states.get(col, False)
             self.df.sort_values(by=col, ascending=not reverse, inplace=True)
             self.sort_states[col] = not reverse
 
-            # Actualiza encabezados con indicador de orden
             for c in self.df.columns:
                 indicator = ''
                 if c == col:
                     indicator = ' \u25B2' if not reverse else ' \u25BC'
-                tree.heading(c, text=c + indicator,
-                            command=lambda col=c: sort_column(col))
+                tree.heading(c, text=c + indicator, command=lambda col=c: sort_column(col))
 
-            # Refresca filas mostradas
             for row in tree.get_children():
                 tree.delete(row)
             for row in self.df.head(5).itertuples(index=False):
                 tree.insert('', 'end', values=list(row))
 
-        # Cargar anchos guardados previamente, si existen
+        # Cargar anchos guardados
         if os.path.exists(CONFIG_FILE):
             try:
                 with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
