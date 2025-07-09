@@ -185,6 +185,8 @@ class PDFGeneratorApp:
 
         self.csv_file = None
         self.df = None
+        # Guarda el estado de ordenamiento por columna
+        self.sort_states = {}
 
     def select_csv(self):
         path = filedialog.askopenfilename(filetypes=[("CSV files","*.csv")])
@@ -211,6 +213,29 @@ class PDFGeneratorApp:
         win.title("Ajustar anchos de columnas")
         tree = ttk.Treeview(win, columns=list(self.df.columns), show='headings')
 
+        # Inicializa estados de ordenamiento
+        self.sort_states = {c: False for c in self.df.columns}
+
+        def sort_column(col):
+            """Ordena el DataFrame por la columna indicada y actualiza la vista."""
+            reverse = self.sort_states.get(col, False)
+            self.df.sort_values(by=col, ascending=not reverse, inplace=True)
+            self.sort_states[col] = not reverse
+
+            # Actualiza encabezados con indicador de orden
+            for c in self.df.columns:
+                indicator = ''
+                if c == col:
+                    indicator = ' \u25B2' if not reverse else ' \u25BC'
+                tree.heading(c, text=c + indicator,
+                            command=lambda col=c: sort_column(col))
+
+            # Refresca filas mostradas
+            for row in tree.get_children():
+                tree.delete(row)
+            for row in self.df.head(5).itertuples(index=False):
+                tree.insert('', 'end', values=list(row))
+
         # Cargar anchos guardados previamente, si existen
         if os.path.exists(CONFIG_FILE):
             try:
@@ -222,7 +247,7 @@ class PDFGeneratorApp:
             saved_widths = {}
 
         for col in self.df.columns:
-            tree.heading(col, text=col)
+            tree.heading(col, text=col, command=lambda c=col: sort_column(c))
             width = saved_widths.get(col, 100)
             tree.column(col, width=width, stretch=True)
         for row in self.df.head(5).itertuples(index=False):
