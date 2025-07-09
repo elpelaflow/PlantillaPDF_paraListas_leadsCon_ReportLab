@@ -60,15 +60,19 @@ PALETTES = [
     },
 ]
 
-# Sorteamos una paleta al iniciar el script
-_palette = random.choice(PALETTES)            # --- MODIFICADO
+# Elegir una paleta y actualizar los colores globales
+def choose_palette():
+    """Escoge una paleta al azar y actualiza las variables de color."""
+    palette = random.choice(PALETTES)
+    global COLOR_1, COLOR_2, COLOR_3, COLOR_4, COLOR_5
+    COLOR_1 = colors.HexColor(palette["HEADER_BG"])
+    COLOR_2 = colors.HexColor(palette["ACCENT"])
+    COLOR_3 = colors.HexColor(palette["GRID"])
+    COLOR_4 = colors.HexColor(palette["ROW_ODD"])
+    COLOR_5 = colors.HexColor(palette["ROW_EVEN"])
 
-# Convertimos a objetos HexColor que ReportLab entiende
-COLOR_1 = colors.HexColor(_palette["HEADER_BG"])
-COLOR_2 = colors.HexColor(_palette["ACCENT"])
-COLOR_3 = colors.HexColor(_palette["GRID"])
-COLOR_4 = colors.HexColor(_palette["ROW_ODD"])
-COLOR_5 = colors.HexColor(_palette["ROW_EVEN"])
+# Paleta inicial para la interfaz
+choose_palette()
 # --------------------------------------------------------------------------
 
 # Archivo donde se guardan los anchos de columna utilizados
@@ -101,6 +105,8 @@ def add_page_elements(canvas, doc):
 # --- Generación del PDF ---
 def generate_pdf(csv_file, col_widths_px=None):
     """Genera un reporte PDF a partir de un archivo CSV."""
+    # Escoger una paleta distinta en cada ejecución
+    choose_palette()
     try:
         # Leer CSV
         df = pd.read_csv(csv_file, sep=';', encoding='utf-8', engine='python')
@@ -204,8 +210,8 @@ class PDFGeneratorApp:
             root,
             text="Seleccionar archivo...",
             command=self.select_csv,
-            bg=str(COLOR_2),           # --- MODIFICADO: usa color de la paleta
-            fg=str(COLOR_1)
+            bg=_palette["ACCENT"],           # --- MODIFICADO: usa color de la paleta
+            fg=_palette["HEADER_BG"]
         ).pack()
         self.file_label = tk.Label(root, text="Ningún archivo seleccionado", font=("Helvetica", 10))
         self.file_label.pack(pady=8)
@@ -213,8 +219,8 @@ class PDFGeneratorApp:
             root,
             text="Generar PDF",
             command=self.on_generate,
-            bg=str(COLOR_1),           # --- MODIFICADO: usa color de la paleta
-            fg=str(COLOR_5)
+            bg=_palette["HEADER_BG"],       # --- MODIFICADO: usa color de la paleta
+            fg=_palette["ROW_EVEN"]
         ).pack(pady=5)
 
         self.csv_file = None
