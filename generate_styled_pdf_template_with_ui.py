@@ -28,27 +28,27 @@ PALETTES = [
     },
     # Paleta 1  (540d6e…)
     {
-        "HEADER_BG": "#540d6e",
-        "ACCENT":    "#ee4266",
-        "GRID":      "#1f271b",
-        "ROW_ODD":   "#ffd23f",
-        "ROW_EVEN":  "#f3fcf0",
+        "HEADER_BG": "#3590f3",
+        "ACCENT":    "#8FB8ED",
+        "GRID":      "#62BFED",
+        "ROW_ODD":   "#F1E3F3",
+        "ROW_EVEN":  "#C2BBF0",
     },
     # Paleta 2  (363537…)
     {
-        "HEADER_BG": "#363537",
-        "ACCENT":    "#ef2d56",
-        "GRID":      "#ed7d3a",
-        "ROW_ODD":   "#2fbf71",
-        "ROW_EVEN":  "#8cd867",
+        "HEADER_BG": "#080357",
+        "ACCENT":    "#ff9f1c",
+        "GRID":      "#ffc15e",
+        "ROW_ODD":   "#d6ffb7",
+        "ROW_EVEN":  "#f5ff90",
     },
     # Paleta 3  (094074…)
     {
-        "HEADER_BG": "#094074",
-        "ACCENT":    "#fe9000",
-        "GRID":      "#3c6997",
-        "ROW_ODD":   "#ffdd4a",
-        "ROW_EVEN":  "#5adbff",
+        "HEADER_BG": "#373737",
+        "ACCENT":    "#FCE694",
+        "GRID":      "#F6FEAA",
+        "ROW_ODD":   "#C7DFC5",
+        "ROW_EVEN":  "#C1DBE3",
     },
     # Paleta 4  (e0acd5…)
     {
@@ -61,15 +61,17 @@ PALETTES = [
 ]
 
 # Elegir una paleta y actualizar los colores globales
+_palette = None  # almacena la última paleta seleccionada
+
 def choose_palette():
     """Escoge una paleta al azar y actualiza las variables de color."""
-    palette = random.choice(PALETTES)
-    global COLOR_1, COLOR_2, COLOR_3, COLOR_4, COLOR_5
-    COLOR_1 = colors.HexColor(palette["HEADER_BG"])
-    COLOR_2 = colors.HexColor(palette["ACCENT"])
-    COLOR_3 = colors.HexColor(palette["GRID"])
-    COLOR_4 = colors.HexColor(palette["ROW_ODD"])
-    COLOR_5 = colors.HexColor(palette["ROW_EVEN"])
+    global COLOR_1, COLOR_2, COLOR_3, COLOR_4, COLOR_5, _palette
+    _palette = random.choice(PALETTES)
+    COLOR_1 = colors.HexColor(_palette["HEADER_BG"])
+    COLOR_2 = colors.HexColor(_palette["ACCENT"])
+    COLOR_3 = colors.HexColor(_palette["GRID"])
+    COLOR_4 = colors.HexColor(_palette["ROW_ODD"])
+    COLOR_5 = colors.HexColor(_palette["ROW_EVEN"])
 
 # Paleta inicial para la interfaz
 choose_palette()
