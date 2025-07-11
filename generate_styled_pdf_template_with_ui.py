@@ -2,7 +2,7 @@ import pandas as pd
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter, landscape
 from reportlab.platypus import (
-    SimpleDocTemplate, LongTable, TableStyle, Paragraph, Spacer
+    SimpleDocTemplate, LongTable, TableStyle, Paragraph, Spacer, PageBreak, Image
 )
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
@@ -104,6 +104,16 @@ def add_page_elements(canvas, doc):
     )
     canvas.restoreState()
 
+# --- Portada ---
+def portada(canvas, doc):
+    """Encabezado diferente para la primera página (portada)."""
+    canvas.saveState()
+    canvas.setFont("Helvetica-Bold", 14)
+    canvas.drawString(1*inch, letter[1] - 1*inch, "Reporte de Leads - Versi\u00f3n 2025")
+    canvas.setFont("Helvetica", 10)
+    canvas.drawString(1*inch, letter[1] - 1.4*inch, "Documento confidencial – uso exclusivo del equipo comercial.")
+    canvas.restoreState()
+
 # --- Generación del PDF ---
 def generate_pdf(csv_file, col_widths_px=None):
     """Genera un reporte PDF a partir de un archivo CSV."""
@@ -167,15 +177,30 @@ def generate_pdf(csv_file, col_widths_px=None):
             topMargin=1*inch, bottomMargin=0.7*inch
         )
 
-        elements = [
-            Paragraph("Listado de Leads Estilizado", styles["Title"]),
-            Spacer(1, 0.1*inch),
-            Paragraph(
-                f"Generado automáticamente el {datetime.now().strftime('%d/%m/%Y %H:%M')}",
-                styles["Normal"]
-            ),
-            Spacer(1, 0.2*inch),
-        ]
+        elements = []
+
+        # --- Portada ---
+        elements.append(Paragraph("\ud83d\udcca Reporte de Leads", styles["Title"]))
+        elements.append(Spacer(1, 0.3 * inch))
+        elements.append(Paragraph("Este informe contiene datos obtenidos mediante scraping de negocios.", styles["Normal"]))
+        elements.append(Spacer(1, 0.2 * inch))
+        elements.append(Paragraph("\ud83d\udd12 Uso exclusivo: Departamento Comercial", styles["Normal"]))
+        elements.append(Spacer(1, 0.4 * inch))
+        elements.append(Paragraph(f"\ud83d\udcc5 Generado el {datetime.now().strftime('%d/%m/%Y')}", styles["Normal"]))
+        # Si existe un logo.png, se inserta al inicio de la portada
+        if os.path.exists("logo.png"):
+            logo = Image("logo.png", width=2*inch, height=2*inch)
+            elements.insert(0, logo)
+        elements.append(PageBreak())  # ← Salto a la página 2
+
+        # --- Página 2 en adelante ---
+        elements.append(Paragraph("Listado de Leads Estilizado", styles["Title"]))
+        elements.append(Spacer(1, 0.1 * inch))
+        elements.append(Paragraph(
+            f"Generado automáticamente el {datetime.now().strftime('%d/%m/%Y %H:%M')}",
+            styles["Normal"]
+        ))
+        elements.append(Spacer(1, 0.2 * inch))
 
         table = LongTable(data, colWidths=col_widths, repeatRows=1)
         table.setStyle(TableStyle([
@@ -193,7 +218,7 @@ def generate_pdf(csv_file, col_widths_px=None):
         ]))
 
         elements.append(table)
-        doc.build(elements, onFirstPage=add_page_elements, onLaterPages=add_page_elements)
+        doc.build(elements, onFirstPage=portada, onLaterPages=add_page_elements)
         messagebox.showinfo("Éxito", f"PDF generado:\n{pdf_file}")
 
     except Exception as e:
