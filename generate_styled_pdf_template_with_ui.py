@@ -104,15 +104,6 @@ def add_page_elements(canvas, doc):
     )
     canvas.restoreState()
 
-# --- Portada ---
-def portada(canvas, doc):
-    """Encabezado diferente para la primera página (portada)."""
-    canvas.saveState()
-    canvas.setFont("Helvetica-Bold", 14)
-    canvas.drawString(1*inch, letter[1] - 1*inch, "Reporte de Leads - Versi\u00f3n 2025")
-    canvas.setFont("Helvetica", 10)
-    canvas.drawString(1*inch, letter[1] - 1.4*inch, "Documento confidencial – uso exclusivo del equipo comercial.")
-    canvas.restoreState()
 
 # --- Generación del PDF ---
 def generate_pdf(csv_file, col_widths_px=None, glossary_pdf=None):
@@ -179,22 +170,7 @@ def generate_pdf(csv_file, col_widths_px=None, glossary_pdf=None):
 
         elements = []
 
-        # --- Portada ---
-        elements.append(Paragraph("\ud83d\udcca Reporte de Leads", styles["Title"]))
-        elements.append(Spacer(1, 0.3 * inch))
-        elements.append(Paragraph("Este informe contiene datos obtenidos mediante scraping de negocios.", styles["Normal"]))
-        elements.append(Spacer(1, 0.2 * inch))
-        elements.append(Paragraph("\ud83d\udd12 Uso exclusivo: Departamento Comercial", styles["Normal"]))
-        elements.append(Spacer(1, 0.4 * inch))
-        elements.append(Paragraph(f"\ud83d\udcc5 Generado el {datetime.now().strftime('%d/%m/%Y')}", styles["Normal"]))
-        # Si existe un logo.png, se inserta al inicio de la portada
-        if os.path.exists("logo.png"):
-            logo = Image("logo.png", width=2*inch, height=2*inch)
-            elements.insert(0, logo)
-
-        elements.append(PageBreak())  # ← Salto a la página 2
-
-        # --- Página 2 en adelante ---
+        # --- Encabezado de tabla ---
         elements.append(Paragraph("Listado de Leads Estilizado", styles["Title"]))
         elements.append(Spacer(1, 0.1 * inch))
         elements.append(Paragraph(
@@ -219,7 +195,7 @@ def generate_pdf(csv_file, col_widths_px=None, glossary_pdf=None):
         ]))
 
         elements.append(table)
-        doc.build(elements, onFirstPage=portada, onLaterPages=add_page_elements)
+        doc.build(elements, onFirstPage=add_page_elements, onLaterPages=add_page_elements)
 
         if glossary_pdf and os.path.exists(glossary_pdf):
             from PyPDF2 import PdfMerger
