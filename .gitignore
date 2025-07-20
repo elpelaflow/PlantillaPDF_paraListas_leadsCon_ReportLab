@@ -1,1 +1,11 @@
 venv/
+
+# Ignore Python bytecode and caches
+__pycache__/
+*.pyc
+
+# Ignore generated PDF files
+*.pdf
+
+# Ignore generated layout data
+column_widths.json

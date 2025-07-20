@@ -191,6 +191,7 @@ def generate_pdf(csv_file, col_widths_px=None):
         if os.path.exists("logo.png"):
             logo = Image("logo.png", width=2*inch, height=2*inch)
             elements.insert(0, logo)
+
         elements.append(PageBreak())  # ← Salto a la página 2
 
         # --- Página 2 en adelante ---
