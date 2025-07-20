@@ -233,6 +233,12 @@ def generate_pdf(csv_file, col_widths_px=None, glossary_pdf=None):
                 merger.write(fout)
             merger.close()
 
+            # Eliminar el PDF intermedio para entregar un único reporte
+            try:
+                os.remove(stylized_pdf)
+            except Exception:
+                pass
+
             messagebox.showinfo("Éxito", f"PDF combinado generado:\n{final_pdf}")
         else:
             messagebox.showinfo("Éxito", f"PDF generado:\n{stylized_pdf}")
