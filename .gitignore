@@ -9,3 +9,6 @@ __pycache__/
 
 # Ignore generated layout data
 column_widths.json
+
+# Ignore .CSV files
+*.csv

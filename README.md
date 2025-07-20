@@ -14,7 +14,7 @@ source venv/bin/activate
 2. Instala las dependencias necesarias:
 
 ```bash
-pip install pandas reportlab
+pip install pandas reportlab PyPDF2
 ```
 
 `tkinter` suele venir incluido con Python.
@@ -27,7 +27,7 @@ Ejecuta el script y sigue las instrucciones que aparecen en pantalla:
 python generate_styled_pdf_template_with_ui.py
 ```
 
-Tras elegir tu archivo CSV, se generará un PDF con el nombre `reporte_leads_estilizado.pdf` en la misma carpeta.
+Tras elegir tu archivo CSV se creará un PDF con la tabla estilizada. Si además seleccionas un glosario en formato PDF, ambos documentos se unirán y obtendrás un archivo `reporte_completo.pdf`.
 
 ## Licencia
 
