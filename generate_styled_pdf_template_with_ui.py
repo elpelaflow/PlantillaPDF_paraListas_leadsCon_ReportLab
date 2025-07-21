@@ -82,7 +82,7 @@ CONFIG_FILE = "column_widths.json"
 
 # Ruta de la imagen utilizada como marca de agua. Modifica esta
 # variable para apuntar a la ubicación de tu archivo PNG
-WATERMARK_IMAGE = "C:\Users\El Pela Flow\OneDrive\Escritorio\watermark.png"
+WATERMARK_IMAGE = r"C:\Users\El Pela Flow\OneDrive\Documentos\ReportLab plantilla leads\watermark.png"
 
 # --- Encabezado y pie ---
 def add_page_elements(canvas, doc):
@@ -91,7 +91,7 @@ def add_page_elements(canvas, doc):
     # --- Marca de agua ---
     if WATERMARK_IMAGE and os.path.exists(WATERMARK_IMAGE):
         canvas.saveState()
-        canvas.setFillAlpha(0.2)
+        canvas.setFillAlpha(0.1)
         width, height = doc.pagesize
         canvas.drawImage(
             WATERMARK_IMAGE,
@@ -188,7 +188,7 @@ def generate_pdf(csv_file, col_widths_px=None, glossary_pdf=None):
         elements = []
 
         # --- Encabezado de tabla ---
-        elements.append(Paragraph("Listado de Leads Estilizado", styles["Title"]))
+        elements.append(Paragraph("Listado de contactos de negocios", styles["Title"]))
         elements.append(Spacer(1, 0.1 * inch))
         elements.append(Paragraph(
             f"Generado automáticamente el {datetime.now().strftime('%d/%m/%Y %H:%M')}",
