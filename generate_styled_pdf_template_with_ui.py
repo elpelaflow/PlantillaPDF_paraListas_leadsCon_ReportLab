@@ -80,9 +80,26 @@ choose_palette()
 # Archivo donde se guardan los anchos de columna utilizados
 CONFIG_FILE = "column_widths.json"
 
+# Ruta de la imagen utilizada como marca de agua. Modifica esta
+# variable para apuntar a la ubicación de tu archivo PNG
+WATERMARK_IMAGE = "C:\Users\El Pela Flow\OneDrive\Escritorio\watermark.png"
+
 # --- Encabezado y pie ---
 def add_page_elements(canvas, doc):
-    """Dibuja en cada página el encabezado y el pie de página."""
+    """Dibuja en cada página el encabezado, el pie y la marca de agua."""
+
+    # --- Marca de agua ---
+    if WATERMARK_IMAGE and os.path.exists(WATERMARK_IMAGE):
+        canvas.saveState()
+        canvas.setFillAlpha(0.2)
+        width, height = doc.pagesize
+        canvas.drawImage(
+            WATERMARK_IMAGE,
+            0, 0, width=width, height=height,
+            preserveAspectRatio=True, mask='auto'
+        )
+        canvas.restoreState()
+
     canvas.saveState()
     canvas.setFont("Helvetica-Bold", 10)
     canvas.setFillColor(COLOR_1)
